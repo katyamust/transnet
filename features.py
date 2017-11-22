@@ -1,14 +1,31 @@
 import pandas as pd
 
-agent_history_straddle_csv_fname = "C:/Users/kamustaf/Documents/transnet_data/agenthistory_straddle_flat_filtered.csv"
+PATH_TO_DATA_FOLDER = r"C:\Users\jterh\Microsoft\OneDrive - Microsoft\_DX era\Hackathons\Machine Learning Hackfest South Africa\data"
+agent_history_straddle_csv_fname = PATH_TO_DATA_FOLDER+r"\agenthistory_straddle_flat_filtered.csv"
 df_agent_history_straddle = pd.read_csv(agent_history_straddle_csv_fname)
 
-print(df_agent_history_straddle.shape)
+#print(df_agent_history_straddle.shape)
 #print(df_agent_history_straddle.head())
-print(df_agent_history_straddle.columns.tolist())
+#print(df_agent_history_straddle.columns.tolist())
+
+#add a new column containing just the EntryDate, not the Entry date and Time.
+df_agent_history_straddle["EntryDate"] = pd.to_datetime(df_agent_history_straddle["EntryTime"]).dt.date
+
+def get_features_for_day_and_param(df,param_name,date, date_name):
+    print("get_features_for_day_and_param")
+    features = [str(date_name+"_"+param_name+"_MEAN"),str(date_name+"_"+param_name+"_STDDEV"),str(date_name+"_"+param_name+"_MAX")]
+    v = df[df["EntryDate"] == date][param_name]
+    v_mean = v.mean()
+    v_stddev = v.std()
+    v_max = v.max()
+    d = {features[0]: [v_mean], features[1]: [v_stddev], features[2]: [v_max]}
+    resultdf = pd.DataFrame(data = d)
+    return resultdf
+
+print(get_features_for_day_and_param(df_agent_history_straddle,'VIB.1.LIV','1/8/2017','TODAY'))
 
 def get_straddle_features(df,IoT_param_name):
-    print("Straddle dataframe")
+    #print("Straddle dataframe")
 
     features = [str("TODAY_0_" + IoT_param_name + "_MEAN" ),
                 str("TODAY_0_" + IoT_param_name + "_STDDEV" ),
@@ -29,7 +46,7 @@ def get_straddle_features(df,IoT_param_name):
 
     #print(features)
     df_lagged = pd.DataFrame(columns=features)
-    print(df_lagged.columns.tolist())
+    #print(df_lagged.columns.tolist())
 
     # get a day from entry time
     df["EntryTimeNew"] = pd.to_datetime(df["EntryTime"]).dt.date
@@ -63,7 +80,7 @@ def get_straddle_features(df,IoT_param_name):
         #df_lagged[str("TODAY_0_" + IoT_param_name + "_MEAN")].append(mean_series)
 
     #print(IoT_param_mean)
-    print(df_lagged.head())
+    #print(df_lagged.head())
 
    # IoT_param_mean = grouped[IoT_param_name].to_list()
 
@@ -85,11 +102,11 @@ def create_lagging_features(df):
     df_dict = grouped.groups
     d = dict.fromkeys(df_dict.keys())
     keys = df_dict.keys()
-    print(df_dict.keys())
+    #print(df_dict.keys())
 
     for key in keys:
         df_straddle = df[df["KEY"] == key]
-        print(key)
+        #print(key)
 
         get_straddle_features(df_straddle,"VIB.1.LIV")
        #both_df = merged[merged['_merge'] == 'both']
