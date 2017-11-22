@@ -1,4 +1,5 @@
 import pandas as pd
+from datetime import timedelta
 
 PATH_TO_DATA_FOLDER = r"C:\Users\jterh\Microsoft\OneDrive - Microsoft\_DX era\Hackathons\Machine Learning Hackfest South Africa\data"
 agent_history_straddle_csv_fname = PATH_TO_DATA_FOLDER+r"\agenthistory_straddle_flat_filtered.csv"
@@ -6,10 +7,12 @@ df_agent_history_straddle = pd.read_csv(agent_history_straddle_csv_fname)
 
 #print(df_agent_history_straddle.shape)
 #print(df_agent_history_straddle.head())
-#print(df_agent_history_straddle.columns.tolist())
+
 
 #add a new column containing just the EntryDate, not the Entry date and Time.
 df_agent_history_straddle["EntryDate"] = pd.to_datetime(df_agent_history_straddle["EntryTime"]).dt.date
+
+print(df_agent_history_straddle.columns.tolist())
 
 def get_features_for_day_and_param(df,param_name,date, date_name):
     print("get_features_for_day_and_param")
@@ -22,7 +25,17 @@ def get_features_for_day_and_param(df,param_name,date, date_name):
     resultdf = pd.DataFrame(data = d)
     return resultdf
 
+def get_features_for_param(df,param_name):
+    print("get_features_for_param")
+    today = df["EntryDate"]
+    
+    feature_names = ["TODAY","TODAY-1","TODAY-2","TODAY-3","TODAY-4"]
+    for i in range(0,4):
+        datenew = today - timedelta(days=i)
+        #print(datenew)
+        df = get_features_for_day_and_param(df,param_name,datenew,feature_names[i])
 
+print(get_features_for_param(df_agent_history_straddle,'VIB.1.LIV'))
 
 def get_straddle_features(df,IoT_param_name):
     #print("Straddle dataframe")
