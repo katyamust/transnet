@@ -6,12 +6,16 @@ import datetime
 FEATURES_TO_INCLUDE = ["VIB.1.LIV","ENG.1.OILPRS","ENG.1.OILLVL","ENG.1.BAT","GPS.1.GNDSPD","SPRDR.1.SPD","FUEL.1.TNK2LVL","SPRDR.1.MOVEMENT","ENG.1.OILTEMP","BRAKE.1","RUNHRS.1"]
 PATH_TO_DATA_FOLDER = r"C:\Users\jterh\Microsoft\OneDrive - Microsoft\_DX era\Hackathons\Machine Learning Hackfest South Africa\data"
 
-agent_history_straddle_csv_fname = PATH_TO_DATA_FOLDER+r"\agenthistory_straddle_flat_filtered.csv"
+if 0:
+    agent_history_straddle_csv_fname = PATH_TO_DATA_FOLDER+r"\agenthistory_straddle_flat_filtered.csv"
+else:
+    agent_history_straddle_csv_fname = "C:/Users/kamustaf/Documents/transnet_data/agenthistory_straddle_flat_filtered.csv"
+    features_file = "C:/Users/kamustaf/Documents/transnet_data/features.csv"
+
 df_agent_history_straddle = pd.read_csv(agent_history_straddle_csv_fname)
 
 #print(df_agent_history_straddle.shape)
 #print(df_agent_history_straddle.head())
-
 
 #add a new column containing just the EntryDate, not the Entry date and Time.
 df_agent_history_straddle["EntryDate"] = pd.to_datetime(df_agent_history_straddle["EntryTime"]).dt.date
@@ -57,117 +61,64 @@ def get_features(df,date,numdaysinhistory):
         resultdf = pd.concat([resultdf,r],axis=1)
     return resultdf
 
-testdate = datetime.datetime.strptime('21/11/2017', "%d/%m/%Y").date()
-print(get_features(df_agent_history_straddle, testdate,4))
 
-#def get_straddle_features(df,IoT_param_name):
-    #print("Straddle dataframe")
+def get_label(df, day):
+    label = pd.DataFrame(data=[0],columns=["label"])
+    #if any(df.EntryDate == day) and (df.IncidentID > 0):
+    if any(df[df.EntryDate == day].IncidentID.notna()):
+        label = pd.DataFrame(data=[1])
+    return label
 
-    #features = [str("TODAY_0_" + IoT_param_name + "_MEAN" ),
-    #            str("TODAY_0_" + IoT_param_name + "_STDDEV" ),
-    #            str("TODAY_0_" + IoT_param_name + "_MAX"),
+def get_straddle_features_alldates(df):
+    print("get_straddle_features_alldates")
 
-    #            str("TODAY_1_" + IoT_param_name + "_MEAN"),
-    #            str("TODAY_1_" + IoT_param_name + "_STDDEV"),
-    #            str("TODAY_1_" + IoT_param_name + "_MAX"),
+    straddle_features = pd.DataFrame()
 
-    #            str("TODAY_2_" + IoT_param_name + "_MEAN"),
-    #            str("TODAY_2_" + IoT_param_name + "_STDDEV"),
-    #            str("TODAY_2_" + IoT_param_name + "_MAX"),
+    days = df["EntryDate"].unique()
+    print(days)
 
-    #            str("TODAY_3_" + IoT_param_name + "_MEAN"),
-    #            str("TODAY_3_" + IoT_param_name + "_STDDEV"),
-    #            str("TODAY_3_" + IoT_param_name + "_MAX")
-    #            ]
+    for day in days:
+        features_df = get_features(df,day,4)
+        label_df = get_label(df,day)
 
-    #print(features)
-    #df_lagged = pd.DataFrame(columns=features)
-    #print(df_lagged.columns.tolist())
+        #concat with features_ df horisontally:
+        features_df = pd.concat([features_df,label_df],axis=1)
 
-    # get a day from entry time
-    #df["EntryTimeNew"] = pd.to_datetime(df["EntryTime"]).dt.date
-    #grouped = df.groupby(df["EntryTimeNew"])
+        straddle_features = pd.concat([straddle_features,features_df],ignore_index=True)
 
-    #days = df["EntryTimeNew"].unique()
-    #print(days)
-    #mean_series  = pd.Series(days.size)
-    #std_series = pd.Series(days.size)
-    #max_series = pd.Series(days.size)
+        #print(features_df.shape)
+        #print(straddle_features.shape)
 
-    #for day in days:
+    return straddle_features
 
-     #   IoT_params = df[df["EntryTimeNew"] == day][IoT_param_name]
+#testdate = datetime.datetime.strptime('21/11/2017', "%d/%m/%Y").date()
+#print(get_features(df_agent_history_straddle, testdate,4))
 
-      #  IoT_param_mean = IoT_params.mean()
-        #mean_series = mean_series.append(pd.Series([IoT_param_mean]))
+def create_lagging_features(df):
 
-      #  IoT_param_stddev = IoT_params.std()
-        #std_series = std_series.append(pd.Series([IoT_param_stddev]))
+    print("create straddle features")
+    grouped = df.groupby(df["KEY"])
 
-       # IoT_param_max = IoT_params.max()
-        #max_series = max_series.append(pd.Series([IoT_param_max]))
+    df_dict = grouped.groups
+    d = dict.fromkeys(df_dict.keys())
+    straddles = df_dict.keys()
+    print(straddles)
 
-        #str("TODAY_0_" + IoT_param_name + "_STDDEV")
-        #str("TODAY_0_" + IoT_param_name + "_MAX")
+    df_all_features = pd.DataFrame()
+    for straddle in straddles:
+        print(straddle)
+        df_straddle = df[df["KEY"] == straddle]
+        straddle_features = get_straddle_features_alldates(df_straddle)
 
-    #mean_series = mean_series.append(pd.Series([IoT_param_mean]))
+        #concat all straddles
+        df_all_features = pd.concat([df_all_features, straddle_features], ignore_index=True)
+        return df_all_features
 
-    #df_lagged[str("TODAY_0_" + IoT_param_name + "_MEAN")].append(pd.Series([IoT_param_mean]))
-        #df_lagged[str("TODAY_0_" + IoT_param_name + "_MEAN")].append(mean_series)
+    return df_all_features
 
-    #print(IoT_param_mean)
-    #print(df_lagged.head())
+all_features = create_lagging_features(df_agent_history_straddle)
+print(all_features.shape)
 
-   # IoT_param_mean = grouped[IoT_param_name].to_list()
+all_features.to_csv(features_file)
 
-    #IoT_param_stddev =
-    #IoT_param_max =
-
-    #VIB_1_LIV_mean = grouped["VIB.1.LIV"].to_list().mean()
-
-    #df_new = pd.DataFrame(features)
-
-    #print(df.head())
-
-    #return df_lagged
-
-#def create_lagging_features(df):
-
-    #grouped = df.groupby(df["KEY"])
-
-    #df_dict = grouped.groups
-    #d = dict.fromkeys(df_dict.keys())
-    #keys = df_dict.keys()
-    #print(df_dict.keys())
-
-    #for key in keys:
-    #    df_straddle = df[df["KEY"] == key]
-        #print(key)
-
-    #    get_straddle_features(df_straddle,"VIB.1.LIV")
-       #both_df = merged[merged['_merge'] == 'both']
-       # merged['_merge'] == 'both'
-        #print(df_straddle.head())
-
-
-    #print(df_dict.values())
-    #print(df_dict['AFRICA.ZAF.KZN.DBN.TPT.POD.STRADDLE.2'])
-    #print(grouped.shape())
-    #print(grouped.head())
-
-#create_lagging_features(df_agent_history_straddle)
-
-#features = ["VIB.1.LIV_MEAN_TODAY","VIB.1.LIV_STDDEV_TODAY","VIB.1.LIV_MAX_TODAY",
- #          "VIB.1.LIV_MEAN_TODAY", "VIB.1.LIV_STDDEV_TODAY","VIB.1.LIV_MAX_TODAY1",
- #          "VIB.1.LIV_MEAN_TODAY", "VIB.1.LIV_STDDEV_TODAY","VIB.1.LIV_MAX_TODAY2",
- #          "VIB.1.LIV_MEAN_TODAY", "VIB.1.LIV_STDDEV_TODAY","VIB.1.LIV_MAX_TODAY3",
- #          "VIB.1.LIV_MEAN_TODAY", "VIB.1.LIV_STDDEV_TODAY","VIB.1.LIV_MAX_TODAY4",
-
- #          "ENG.1.OILPRS_MEAN_TODAY", "ENG.1.OILPRS_STDDEV_TODAY", "ENG.1.OILPRS_MAX_TODAY",
- #          "ENG.1.OILPRS_MEAN_TODAY", "ENG.1.OILPRS_STDDEV_TODAY", "ENG.1.OILPRS_MAX_TODAY1",
- #          "ENG.1.OILPRS_MEAN_TODAY", "ENG.1.OILPRS_STDDEV_TODAY", "ENG.1.OILPRS_MAX_TODAY2",
- #          "ENG.1.OILPRS_MEAN_TODAY", "ENG.1.OILPRS_STDDEV_TODAY", "ENG.1.OILPRS_MAX_TODAY3",
- #          "ENG.1.OILPRS_MEAN_TODAY", "ENG.1.OILPRS_STDDEV_TODAY", "ENG.1.OILPRS_MAX_TODAY4",
-
-  #         "Breakdown"
-  #         ]
+print("Done.")
