@@ -2,7 +2,10 @@ import pandas as pd
 from datetime import timedelta
 import datetime
 
+#CONFIG
+FEATURES_TO_INCLUDE = ["VIB.1.LIV","ENG.1.OILPRS","ENG.1.OILLVL","ENG.1.BAT","GPS.1.GNDSPD","SPRDR.1.SPD","FUEL.1.TNK2LVL","SPRDR.1.MOVEMENT","ENG.1.OILTEMP","BRAKE.1","RUNHRS.1"]
 PATH_TO_DATA_FOLDER = r"C:\Users\jterh\Microsoft\OneDrive - Microsoft\_DX era\Hackathons\Machine Learning Hackfest South Africa\data"
+
 agent_history_straddle_csv_fname = PATH_TO_DATA_FOLDER+r"\agenthistory_straddle_flat_filtered.csv"
 df_agent_history_straddle = pd.read_csv(agent_history_straddle_csv_fname)
 
@@ -16,7 +19,7 @@ df_agent_history_straddle["EntryDate"] = pd.to_datetime(df_agent_history_straddl
 #print(df_agent_history_straddle.columns.tolist())
 
 def get_features_for_day_and_param(df,param_name,date, date_name):
-    print("get_features_for_day_and_param")
+    #print("get_features_for_day_and_param")
     features = [str(date_name+"_"+param_name+"_MEAN"),str(date_name+"_"+param_name+"_STDDEV"),str(date_name+"_"+param_name+"_MAX")]
     if any(df.EntryDate == date) :
         v = df[df["EntryDate"] == date][param_name]
@@ -30,8 +33,10 @@ def get_features_for_day_and_param(df,param_name,date, date_name):
 #print(get_features_for_day_and_param(df_agent_history_straddle,'VIB.1.LIV','1/8/2017','TODAY'))
 
 def get_features_for_param(df,param_name, date,numdaysinhistory):
-    print("get_features_for_param")
-    feature_names = ["TODAY","TODAY-1","TODAY-2","TODAY-3","TODAY-4"]
+    #print("get_features_for_param")
+    feature_names = ["TODAY"]
+    for i in range(1,numdaysinhistory+1):
+        feature_names.append(str(feature_names[0]+"-"+str(i)))
     resultdf = pd.DataFrame()
     for i in range(0,numdaysinhistory+1):
         datenew = date - timedelta(days=i)
@@ -40,54 +45,66 @@ def get_features_for_param(df,param_name, date,numdaysinhistory):
             resultdf = pd.concat([resultdf,r],axis=1)
     return resultdf
 
-testdate = datetime.datetime.strptime('21/11/2017', "%d/%m/%Y").date()
-print(get_features_for_param(df_agent_history_straddle,'VIB.1.LIV', testdate,4))
+#testdate = datetime.datetime.strptime('21/11/2017', "%d/%m/%Y").date()
+#print(get_features_for_param(df_agent_history_straddle,'VIB.1.LIV', testdate,4))
 
-def get_straddle_features(df,IoT_param_name):
+def get_features(df,date,numdaysinhistory):
+    print("get features")
+    
+    resultdf = pd.DataFrame()
+    for f in FEATURES_TO_INCLUDE:
+        r = get_features_for_param(df,f,date,numdaysinhistory)
+        resultdf = pd.concat([resultdf,r],axis=1)
+    return resultdf
+
+testdate = datetime.datetime.strptime('21/11/2017', "%d/%m/%Y").date()
+print(get_features(df_agent_history_straddle, testdate,4))
+
+#def get_straddle_features(df,IoT_param_name):
     #print("Straddle dataframe")
 
-    features = [str("TODAY_0_" + IoT_param_name + "_MEAN" ),
-                str("TODAY_0_" + IoT_param_name + "_STDDEV" ),
-                str("TODAY_0_" + IoT_param_name + "_MAX"),
+    #features = [str("TODAY_0_" + IoT_param_name + "_MEAN" ),
+    #            str("TODAY_0_" + IoT_param_name + "_STDDEV" ),
+    #            str("TODAY_0_" + IoT_param_name + "_MAX"),
 
-                str("TODAY_1_" + IoT_param_name + "_MEAN"),
-                str("TODAY_1_" + IoT_param_name + "_STDDEV"),
-                str("TODAY_1_" + IoT_param_name + "_MAX"),
+    #            str("TODAY_1_" + IoT_param_name + "_MEAN"),
+    #            str("TODAY_1_" + IoT_param_name + "_STDDEV"),
+    #            str("TODAY_1_" + IoT_param_name + "_MAX"),
 
-                str("TODAY_2_" + IoT_param_name + "_MEAN"),
-                str("TODAY_2_" + IoT_param_name + "_STDDEV"),
-                str("TODAY_2_" + IoT_param_name + "_MAX"),
+    #            str("TODAY_2_" + IoT_param_name + "_MEAN"),
+    #            str("TODAY_2_" + IoT_param_name + "_STDDEV"),
+    #            str("TODAY_2_" + IoT_param_name + "_MAX"),
 
-                str("TODAY_3_" + IoT_param_name + "_MEAN"),
-                str("TODAY_3_" + IoT_param_name + "_STDDEV"),
-                str("TODAY_3_" + IoT_param_name + "_MAX")
-                ]
+    #            str("TODAY_3_" + IoT_param_name + "_MEAN"),
+    #            str("TODAY_3_" + IoT_param_name + "_STDDEV"),
+    #            str("TODAY_3_" + IoT_param_name + "_MAX")
+    #            ]
 
     #print(features)
-    df_lagged = pd.DataFrame(columns=features)
+    #df_lagged = pd.DataFrame(columns=features)
     #print(df_lagged.columns.tolist())
 
     # get a day from entry time
-    df["EntryTimeNew"] = pd.to_datetime(df["EntryTime"]).dt.date
+    #df["EntryTimeNew"] = pd.to_datetime(df["EntryTime"]).dt.date
     #grouped = df.groupby(df["EntryTimeNew"])
 
-    days = df["EntryTimeNew"].unique()
+    #days = df["EntryTimeNew"].unique()
     #print(days)
-    mean_series  = pd.Series(days.size)
-    std_series = pd.Series(days.size)
-    max_series = pd.Series(days.size)
+    #mean_series  = pd.Series(days.size)
+    #std_series = pd.Series(days.size)
+    #max_series = pd.Series(days.size)
 
-    for day in days:
+    #for day in days:
 
-        IoT_params = df[df["EntryTimeNew"] == day][IoT_param_name]
+     #   IoT_params = df[df["EntryTimeNew"] == day][IoT_param_name]
 
-        IoT_param_mean = IoT_params.mean()
+      #  IoT_param_mean = IoT_params.mean()
         #mean_series = mean_series.append(pd.Series([IoT_param_mean]))
 
-        IoT_param_stddev = IoT_params.std()
+      #  IoT_param_stddev = IoT_params.std()
         #std_series = std_series.append(pd.Series([IoT_param_stddev]))
 
-        IoT_param_max = IoT_params.max()
+       # IoT_param_max = IoT_params.max()
         #max_series = max_series.append(pd.Series([IoT_param_max]))
 
         #str("TODAY_0_" + IoT_param_name + "_STDDEV")
@@ -95,7 +112,7 @@ def get_straddle_features(df,IoT_param_name):
 
     #mean_series = mean_series.append(pd.Series([IoT_param_mean]))
 
-    df_lagged[str("TODAY_0_" + IoT_param_name + "_MEAN")].append(pd.Series([IoT_param_mean]))
+    #df_lagged[str("TODAY_0_" + IoT_param_name + "_MEAN")].append(pd.Series([IoT_param_mean]))
         #df_lagged[str("TODAY_0_" + IoT_param_name + "_MEAN")].append(mean_series)
 
     #print(IoT_param_mean)
@@ -112,22 +129,22 @@ def get_straddle_features(df,IoT_param_name):
 
     #print(df.head())
 
-    return df_lagged
+    #return df_lagged
 
-def create_lagging_features(df):
+#def create_lagging_features(df):
 
-    grouped = df.groupby(df["KEY"])
+    #grouped = df.groupby(df["KEY"])
 
-    df_dict = grouped.groups
-    d = dict.fromkeys(df_dict.keys())
-    keys = df_dict.keys()
+    #df_dict = grouped.groups
+    #d = dict.fromkeys(df_dict.keys())
+    #keys = df_dict.keys()
     #print(df_dict.keys())
 
-    for key in keys:
-        df_straddle = df[df["KEY"] == key]
+    #for key in keys:
+    #    df_straddle = df[df["KEY"] == key]
         #print(key)
 
-        get_straddle_features(df_straddle,"VIB.1.LIV")
+    #    get_straddle_features(df_straddle,"VIB.1.LIV")
        #both_df = merged[merged['_merge'] == 'both']
        # merged['_merge'] == 'both'
         #print(df_straddle.head())
@@ -138,19 +155,19 @@ def create_lagging_features(df):
     #print(grouped.shape())
     #print(grouped.head())
 
-create_lagging_features(df_agent_history_straddle)
+#create_lagging_features(df_agent_history_straddle)
 
-features = ["VIB.1.LIV_MEAN_TODAY","VIB.1.LIV_STDDEV_TODAY","VIB.1.LIV_MAX_TODAY",
-           "VIB.1.LIV_MEAN_TODAY", "VIB.1.LIV_STDDEV_TODAY","VIB.1.LIV_MAX_TODAY1",
-           "VIB.1.LIV_MEAN_TODAY", "VIB.1.LIV_STDDEV_TODAY","VIB.1.LIV_MAX_TODAY2",
-           "VIB.1.LIV_MEAN_TODAY", "VIB.1.LIV_STDDEV_TODAY","VIB.1.LIV_MAX_TODAY3",
-           "VIB.1.LIV_MEAN_TODAY", "VIB.1.LIV_STDDEV_TODAY","VIB.1.LIV_MAX_TODAY4",
+#features = ["VIB.1.LIV_MEAN_TODAY","VIB.1.LIV_STDDEV_TODAY","VIB.1.LIV_MAX_TODAY",
+ #          "VIB.1.LIV_MEAN_TODAY", "VIB.1.LIV_STDDEV_TODAY","VIB.1.LIV_MAX_TODAY1",
+ #          "VIB.1.LIV_MEAN_TODAY", "VIB.1.LIV_STDDEV_TODAY","VIB.1.LIV_MAX_TODAY2",
+ #          "VIB.1.LIV_MEAN_TODAY", "VIB.1.LIV_STDDEV_TODAY","VIB.1.LIV_MAX_TODAY3",
+ #          "VIB.1.LIV_MEAN_TODAY", "VIB.1.LIV_STDDEV_TODAY","VIB.1.LIV_MAX_TODAY4",
 
-           "ENG.1.OILPRS_MEAN_TODAY", "ENG.1.OILPRS_STDDEV_TODAY", "ENG.1.OILPRS_MAX_TODAY",
-           "ENG.1.OILPRS_MEAN_TODAY", "ENG.1.OILPRS_STDDEV_TODAY", "ENG.1.OILPRS_MAX_TODAY1",
-           "ENG.1.OILPRS_MEAN_TODAY", "ENG.1.OILPRS_STDDEV_TODAY", "ENG.1.OILPRS_MAX_TODAY2",
-           "ENG.1.OILPRS_MEAN_TODAY", "ENG.1.OILPRS_STDDEV_TODAY", "ENG.1.OILPRS_MAX_TODAY3",
-           "ENG.1.OILPRS_MEAN_TODAY", "ENG.1.OILPRS_STDDEV_TODAY", "ENG.1.OILPRS_MAX_TODAY4",
+ #          "ENG.1.OILPRS_MEAN_TODAY", "ENG.1.OILPRS_STDDEV_TODAY", "ENG.1.OILPRS_MAX_TODAY",
+ #          "ENG.1.OILPRS_MEAN_TODAY", "ENG.1.OILPRS_STDDEV_TODAY", "ENG.1.OILPRS_MAX_TODAY1",
+ #          "ENG.1.OILPRS_MEAN_TODAY", "ENG.1.OILPRS_STDDEV_TODAY", "ENG.1.OILPRS_MAX_TODAY2",
+ #          "ENG.1.OILPRS_MEAN_TODAY", "ENG.1.OILPRS_STDDEV_TODAY", "ENG.1.OILPRS_MAX_TODAY3",
+ #          "ENG.1.OILPRS_MEAN_TODAY", "ENG.1.OILPRS_STDDEV_TODAY", "ENG.1.OILPRS_MAX_TODAY4",
 
-           "Breakdown"
-           ]
+  #         "Breakdown"
+  #         ]
