@@ -1,5 +1,6 @@
 import pandas as pd
 from datetime import timedelta
+import datetime
 
 PATH_TO_DATA_FOLDER = r"C:\Users\jterh\Microsoft\OneDrive - Microsoft\_DX era\Hackathons\Machine Learning Hackfest South Africa\data"
 agent_history_straddle_csv_fname = PATH_TO_DATA_FOLDER+r"\agenthistory_straddle_flat_filtered.csv"
@@ -12,30 +13,35 @@ df_agent_history_straddle = pd.read_csv(agent_history_straddle_csv_fname)
 #add a new column containing just the EntryDate, not the Entry date and Time.
 df_agent_history_straddle["EntryDate"] = pd.to_datetime(df_agent_history_straddle["EntryTime"]).dt.date
 
-print(df_agent_history_straddle.columns.tolist())
+#print(df_agent_history_straddle.columns.tolist())
 
 def get_features_for_day_and_param(df,param_name,date, date_name):
     print("get_features_for_day_and_param")
     features = [str(date_name+"_"+param_name+"_MEAN"),str(date_name+"_"+param_name+"_STDDEV"),str(date_name+"_"+param_name+"_MAX")]
-    v = df[df["EntryDate"] == date][param_name]
-    v_mean = v.mean()
-    v_stddev = v.std()
-    v_max = v.max()
-    d = {features[0]: [v_mean], features[1]: [v_stddev], features[2]: [v_max]}
-    resultdf = pd.DataFrame(data = d)
+    if any(df.EntryDate == date) :
+        v = df[df["EntryDate"] == date][param_name]
+        v_mean = v.mean()
+        v_stddev = v.std()
+        v_max = v.max()
+        d = {features[0]: [v_mean], features[1]: [v_stddev], features[2]: [v_max]}
+        resultdf = pd.DataFrame(data = d)
+        return resultdf
+
+#print(get_features_for_day_and_param(df_agent_history_straddle,'VIB.1.LIV','1/8/2017','TODAY'))
+
+def get_features_for_param(df,param_name, date,numdaysinhistory):
+    print("get_features_for_param")
+    feature_names = ["TODAY","TODAY-1","TODAY-2","TODAY-3","TODAY-4"]
+    resultdf = pd.DataFrame()
+    for i in range(0,numdaysinhistory+1):
+        datenew = date - timedelta(days=i)
+        if any(df.EntryDate == datenew):
+            r = get_features_for_day_and_param(df,param_name,datenew,feature_names[i])
+            resultdf = pd.concat([resultdf,r],axis=1)
     return resultdf
 
-def get_features_for_param(df,param_name):
-    print("get_features_for_param")
-    today = df["EntryDate"]
-    
-    feature_names = ["TODAY","TODAY-1","TODAY-2","TODAY-3","TODAY-4"]
-    for i in range(0,4):
-        datenew = today - timedelta(days=i)
-        #print(datenew)
-        df = get_features_for_day_and_param(df,param_name,datenew,feature_names[i])
-
-print(get_features_for_param(df_agent_history_straddle,'VIB.1.LIV'))
+testdate = datetime.datetime.strptime('21/11/2017', "%d/%m/%Y").date()
+print(get_features_for_param(df_agent_history_straddle,'VIB.1.LIV', testdate,4))
 
 def get_straddle_features(df,IoT_param_name):
     #print("Straddle dataframe")
