@@ -28,7 +28,7 @@ def get_straddle_features(df,IoT_param_name):
                 ]
 
     #print(features)
-    df_lagged = pd.DataFrame(features)
+    df_lagged = pd.DataFrame(columns=features)
     print(df_lagged.columns.tolist())
 
     # get a day from entry time
@@ -46,21 +46,24 @@ def get_straddle_features(df,IoT_param_name):
         IoT_params = df[df["EntryTimeNew"] == day][IoT_param_name]
 
         IoT_param_mean = IoT_params.mean()
-        mean_series = mean_series.append(pd.Series([IoT_param_mean]))
+        #mean_series = mean_series.append(pd.Series([IoT_param_mean]))
 
         IoT_param_stddev = IoT_params.std()
-        std_series = std_series.append(pd.Series([IoT_param_stddev]))
+        #std_series = std_series.append(pd.Series([IoT_param_stddev]))
 
         IoT_param_max = IoT_params.max()
-        max_series = max_series.append(pd.Series([IoT_param_max]))
+        #max_series = max_series.append(pd.Series([IoT_param_max]))
 
         #str("TODAY_0_" + IoT_param_name + "_STDDEV")
         #str("TODAY_0_" + IoT_param_name + "_MAX")
 
-    df_lagged[str("TODAY_0_" + IoT_param_name + "_MEAN" )] = mean_series
+    #mean_series = mean_series.append(pd.Series([IoT_param_mean]))
+
+    df_lagged[str("TODAY_0_" + IoT_param_name + "_MEAN")].append(pd.Series([IoT_param_mean]))
+        #df_lagged[str("TODAY_0_" + IoT_param_name + "_MEAN")].append(mean_series)
 
     #print(IoT_param_mean)
-    print(mean_series)
+    print(df_lagged.head())
 
    # IoT_param_mean = grouped[IoT_param_name].to_list()
 
@@ -73,7 +76,7 @@ def get_straddle_features(df,IoT_param_name):
 
     #print(df.head())
 
-    return df
+    return df_lagged
 
 def create_lagging_features(df):
 
