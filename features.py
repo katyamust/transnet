@@ -64,10 +64,10 @@ def get_features(df,date,numdaysinhistory):
 
 def get_label(df, day):
     label = pd.DataFrame(data=[0],columns=["label"])
-    #if any(df.EntryDate == day) and (df.IncidentID > 0):
     if any(df[df.EntryDate == day].IncidentID.notna()):
         label = pd.DataFrame(data=[1])
     return label
+
 
 def get_straddle_features_alldates(df):
     print("get_straddle_features_alldates")
@@ -112,7 +112,6 @@ def create_lagging_features(df):
 
         #concat all straddles
         df_all_features = pd.concat([df_all_features, straddle_features], ignore_index=True)
-        return df_all_features
 
     return df_all_features
 
