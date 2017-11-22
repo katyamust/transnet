@@ -22,7 +22,7 @@ def get_features_for_day_and_param(df,param_name,date, date_name):
     resultdf = pd.DataFrame(data = d)
     return resultdf
 
-print(get_features_for_day_and_param(df_agent_history_straddle,'VIB.1.LIV','1/8/2017','TODAY'))
+
 
 def get_straddle_features(df,IoT_param_name):
     #print("Straddle dataframe")
