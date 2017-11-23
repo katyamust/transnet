@@ -47,14 +47,14 @@ def merge_tables():
 #merge_tables()
 
 #after the merge, taking agenthistory_straddle_flat csv and dropping columns
-ahfile = PATH_TO_DATA_FOLDER+r'\agenthistory_straddle_flat.csv'
+ahfile = PATH_TO_DATA_FOLDER+r'\agenthistory_straddle_flat_full.csv'
 df = pd.read_csv(ahfile, encoding='utf8')
 
 #preprocess: remove columns
 def drop_columns(df):
     cols_to_remove = ['ID','VIB.1.MAX','GPS.1.GNDHEAD','GPS.1.ALT','GPS.1.LON','GPS.1.LAT','EntryTime15Mins','CAN.1.READY','PostUtc','FromUtc','GPS.1.SATS','GSM.1.RSSI','GEAR.1','ProcessUtc','GATEWAY.1.MAC','GATEWAY.1.VERSION','DIAG.1.THREAD','DIAG.1.EVENT','DIAG.1.MEM','ENGINE.1.OILLVL','NextBreakdown','Breakdown description','Reported by','Employee No','Description of repair','Shift','Status','Signed back by','Supervisor','OEM','Location']
     df = df.drop(cols_to_remove,axis=1)
-    df.to_csv(PATH_TO_DATA_FOLDER+r'\agenthistory_straddle_flat_filtered.csv')
+    df.to_csv(PATH_TO_DATA_FOLDER+r'\agenthistory_straddle_flat_full_filtered.csv')
     return df
 
 df = drop_columns(df)
