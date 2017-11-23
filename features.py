@@ -67,9 +67,8 @@ def get_features(df,date,numdaysinhistory):
 def get_label(df, day):
     label = pd.DataFrame(data=[0],columns=["label"])
     if any(df[df.EntryDate == day].IncidentID.notna()):
-        label = pd.DataFrame(data=[1])
+        label = pd.DataFrame(data=[1],columns=["label"])
     return label
-
 
 def get_straddle_features_alldates(df):
     print("get_straddle_features_alldates")
