@@ -46,10 +46,10 @@ def get_features_for_param(df,param_name, date,numdaysinhistory):
     resultdf = pd.DataFrame()
     for i in range(0,numdaysinhistory+1):
         datenew = date - timedelta(days=i)
-        if any(df.EntryDate == datenew):
-            r = get_features_for_day_and_param(df,param_name,datenew,feature_names[i])
-            resultdf = pd.concat([resultdf,r],axis=1)
-    return resultdf #returns empty data frame if date do not exist
+        #if any(df.EntryDate == datenew):
+        r = get_features_for_day_and_param(df,param_name,datenew,feature_names[i])
+        resultdf = pd.concat([resultdf,r],axis=1)
+    return resultdf
 
 #testdate = datetime.datetime.strptime('21/11/2017', "%d/%m/%Y").date()
 #print(get_features_for_param(df_agent_history_straddle,'VIB.1.LIV', testdate,4))
@@ -118,6 +118,7 @@ def create_lagging_features(df):
 
         #concat all straddles
         df_all_features = pd.concat([df_all_features, straddle_features], ignore_index=True)
+        #return df_all_features
 
     return df_all_features
 
