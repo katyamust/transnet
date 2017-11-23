@@ -14,7 +14,7 @@ else:
 
 df_agent_history_straddle = pd.read_csv(agent_history_straddle_csv_fname)
 
-#print(df_agent_history_straddle.shape)
+print(df_agent_history_straddle.shape)
 #print(df_agent_history_straddle.head())
 
 #add a new column containing just the EntryDate, not the Entry date and Time.
@@ -31,8 +31,10 @@ def get_features_for_day_and_param(df,param_name,date, date_name):
         v_stddev = v.std()
         v_max = v.max()
         d = {features[0]: [v_mean], features[1]: [v_stddev], features[2]: [v_max]}
-        resultdf = pd.DataFrame(data = d)
-        return resultdf
+    else:
+        d = {features[0]: [None], features[1]: [None], features[2]: [None]}
+    resultdf = pd.DataFrame(data=d)
+    return resultdf
 
 #print(get_features_for_day_and_param(df_agent_history_straddle,'VIB.1.LIV','1/8/2017','TODAY'))
 
@@ -47,7 +49,7 @@ def get_features_for_param(df,param_name, date,numdaysinhistory):
         if any(df.EntryDate == datenew):
             r = get_features_for_day_and_param(df,param_name,datenew,feature_names[i])
             resultdf = pd.concat([resultdf,r],axis=1)
-    return resultdf
+    return resultdf #returns empty data frame if date do not exist
 
 #testdate = datetime.datetime.strptime('21/11/2017', "%d/%m/%Y").date()
 #print(get_features_for_param(df_agent_history_straddle,'VIB.1.LIV', testdate,4))
@@ -79,10 +81,14 @@ def get_straddle_features_alldates(df):
 
     for day in days:
         features_df = get_features(df,day,4)
+        print("features_df")
+        print(features_df.shape)
         label_df = get_label(df,day)
 
         #concat with features_ df horisontally:
         features_df = pd.concat([features_df,label_df],axis=1)
+        print("features_df labels df concat")
+        print(features_df.shape)
 
         straddle_features = pd.concat([straddle_features,features_df],ignore_index=True)
 
