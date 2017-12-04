@@ -1,0 +1,12 @@
+{
+    "path":{
+        "Jeroen" : "C:/Users/jterh/Microsoft/OneDrive - Microsoft/_DX era/Hackathons/Machine Learning Hackfest South Africa/data",
+        "Katya"  : "C:/Users/kamustaf/Documents/transnet_data/"
+    },
+    "files": {
+        "test_dataset"    : "agenthistory_straddle_flat_filtered.csv",
+        "dataset"         : "agenthistory_straddle_flat_full_filtered.csv",
+        "test_featureset" : "features_test.csv",
+        "featureset"      : "features.csv"
+    }
+}
