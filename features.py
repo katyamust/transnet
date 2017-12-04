@@ -136,14 +136,16 @@ def create_lagging_features(df):
     print(straddles)
 
     df_all_features = pd.DataFrame()
+    df_all_features_list = []
     for straddle in straddles:
         print(straddle)
         df_straddle = df[df["KEY"] == straddle]
         straddle_features = get_straddle_features_alldates(df_straddle)
 
-        #concat all straddles
-        df_all_features = pd.concat([df_all_features, straddle_features], ignore_index=True)
-        #return df_all_features
+        df_all_features_list.append(straddle_features)
+
+    # concat all straddles
+    df_all_features = pd.concat(df_all_features_list, ignore_index=True)
 
     return df_all_features
 
