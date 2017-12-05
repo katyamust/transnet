@@ -36,8 +36,9 @@ df_agent_history_straddle["EntryDate"] = pd.to_datetime(df_agent_history_straddl
 def get_features_for_day_and_param(df,param_name,date, date_name):
     #print("get_features_for_day_and_param")
     features = [str(date_name+"_"+param_name+"_MEAN"),str(date_name+"_"+param_name+"_STDDEV"),str(date_name+"_"+param_name+"_MAX")]
-    if any(df.EntryDate == date) :
-        v = df[df["EntryDate"] == date][param_name]
+    df_date = df[df["EntryDate"] == date]
+    if not df_date.empty :#any(df.EntryDate == date) :
+        v = df_date[param_name]
         v_mean = v.mean()
         v_stddev = v.std()
         v_max = v.max()
