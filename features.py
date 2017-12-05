@@ -55,11 +55,14 @@ def get_features_for_param(df,param_name, date,numdaysinhistory):
     for i in range(1,numdaysinhistory+1):
         feature_names.append(str(feature_names[0]+"-"+str(i)))
     resultdf = pd.DataFrame()
+    resultdf_list = []
     for i in range(0,numdaysinhistory+1):
         datenew = date - timedelta(days=i)
         #if any(df.EntryDate == datenew):
         r = get_features_for_day_and_param(df,param_name,datenew,feature_names[i])
-        resultdf = pd.concat([resultdf,r],axis=1)
+        resultdf_list.append(r)
+        #resultdf = pd.concat([resultdf,r],axis=1)
+    resultdf = pd.concat(resultdf_list, axis=1)
     return resultdf
 
 #testdate = datetime.datetime.strptime('21/11/2017', "%d/%m/%Y").date()
@@ -71,32 +74,28 @@ def get_features(df,date,numdaysinhistory):
     #start_time = time.time()
 
     resultdf = pd.DataFrame()
+    resultdf_list = []
     for f in FEATURES_TO_INCLUDE:
         r = get_features_for_param(df,f,date,numdaysinhistory)
-        resultdf = pd.concat([resultdf,r],axis=1)
-
+        resultdf_list.append(r)
+        #resultdf = pd.concat([resultdf,r],axis=1)
+    resultdf = pd.concat(resultdf_list, axis=1)
     #print("--- %s seconds ---" % (time.time() - start_time))
 
     return resultdf
 
 
 def get_label(df, day):
-    #print("get labels")
-
-    #start_time= time.time()
-
     label = pd.DataFrame(data=[0],columns=["label"])
     if any(df[df.EntryDate == day].IncidentID.notna()):
         label = pd.DataFrame(data=[1],columns=["label"])
-
-    #print("--- %s seconds ---" % (time.time() - start_time))
-
     return label
 
 def get_straddle_features_alldates(df):
     print("get_straddle_features_alldates")
 
-    straddle_features = pd.DataFrame()
+    #straddle_features = pd.DataFrame()
+    straddle_features_list = []
 
     days = df["EntryDate"].unique()
     print(days)
@@ -115,10 +114,10 @@ def get_straddle_features_alldates(df):
         print(features_df.shape)
         print("--- %s seconds ---" % (time.time() - start_time))
 
-        straddle_features = pd.concat([straddle_features,features_df],ignore_index=True)
+        straddle_features_list.append(features_df)
+        #straddle_features = pd.concat([straddle_features,features_df],ignore_index=True)
 
-        #print(features_df.shape)
-        #print(straddle_features.shape)
+    straddle_features = pd.concat(straddle_features_list,ignore_index=True)
 
     return straddle_features
 
@@ -135,19 +134,19 @@ def create_lagging_features(df):
     straddles = df_dict.keys()
     print(straddles)
 
-    df_all_features = pd.DataFrame()
-    df_all_features_list = []
+    #df_all_features = pd.DataFrame()
+    df_all_straddles_features_list = []
     for straddle in straddles:
         print(straddle)
         df_straddle = df[df["KEY"] == straddle]
         straddle_features = get_straddle_features_alldates(df_straddle)
 
-        df_all_features_list.append(straddle_features)
+        df_all_straddles_features_list.append(straddle_features)
 
     # concat all straddles
-    df_all_features = pd.concat(df_all_features_list, ignore_index=True)
+    df_all_straddles_features = pd.concat(df_all_straddles_features_list, ignore_index=True)
 
-    return df_all_features
+    return df_all_straddles_features
 
 start_time = time.time()
 all_features = create_lagging_features(df_agent_history_straddle)
