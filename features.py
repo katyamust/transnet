@@ -33,10 +33,11 @@ df_agent_history_straddle["EntryDate"] = pd.to_datetime(df_agent_history_straddl
 
 #print(df_agent_history_straddle.columns.tolist())
 
-def get_features_for_day_and_param(df,param_name,date, date_name):
+def get_features_for_day_and_param(df_date,param_name,date_name):
+
     #print("get_features_for_day_and_param")
     features = [str(date_name+"_"+param_name+"_MEAN"),str(date_name+"_"+param_name+"_STDDEV"),str(date_name+"_"+param_name+"_MAX")]
-    df_date = df[df["EntryDate"] == date]
+
     if not df_date.empty :#any(df.EntryDate == date) :
         v = df_date[param_name]
         v_mean = v.mean()
@@ -50,35 +51,50 @@ def get_features_for_day_and_param(df,param_name,date, date_name):
 
 #print(get_features_for_day_and_param(df_agent_history_straddle,'VIB.1.LIV','1/8/2017','TODAY'))
 
-def get_features_for_param(df,param_name, date,numdaysinhistory):
+def get_features_for_param(df_straddle,param_name1, date,numdaysinhistory):
     #print("get_features_for_param")
-    feature_names = ["TODAY"]
+    date_names = ["TODAY"]
     for i in range(1,numdaysinhistory+1):
-        feature_names.append(str(feature_names[0]+"-"+str(i)))
-    resultdf = pd.DataFrame()
+        date_names.append(str(date_names[0]+"-"+str(i)))
+
     resultdf_list = []
     for i in range(0,numdaysinhistory+1):
         datenew = date - timedelta(days=i)
-        #if any(df.EntryDate == datenew):
-        r = get_features_for_day_and_param(df,param_name,datenew,feature_names[i])
-        resultdf_list.append(r)
-        #resultdf = pd.concat([resultdf,r],axis=1)
+        df_date = df_straddle[df_straddle["EntryDate"] == datenew]
+
+        #if df_date.empty:
+        #    continue
+
+        params_list_this_date = []
+        for param_name in FEATURES_TO_INCLUDE:
+            r_df = get_features_for_day_and_param(df_date,param_name,date_names[i])
+            params_list_this_date.append(r_df)
+        params_df_this_date = pd.concat(params_list_this_date,axis =1)
+        resultdf_list.append(params_df_this_date)
     resultdf = pd.concat(resultdf_list, axis=1)
     return resultdf
 
 #testdate = datetime.datetime.strptime('21/11/2017', "%d/%m/%Y").date()
 #print(get_features_for_param(df_agent_history_straddle,'VIB.1.LIV', testdate,4))
 
-def get_features(df,date,numdaysinhistory):
+def get_features(df_straddle,date,numdaysinhistory):
     #print("get features for date")
+
+###########
+    param_name_not_used = ""
+    r1 = get_features_for_param(df_straddle,param_name_not_used,date,numdaysinhistory)
+    return r1
+###########
 
     #start_time = time.time()
 
     resultdf = pd.DataFrame()
+
     resultdf_list = []
-    for f in FEATURES_TO_INCLUDE:
-        r = get_features_for_param(df,f,date,numdaysinhistory)
-        resultdf_list.append(r)
+    #for f in FEATURES_TO_INCLUDE:
+    param_name_not_used = ""
+    r = get_features_for_param(df_straddle,param_name_not_used,date,numdaysinhistory)
+    resultdf_list.append(r)
         #resultdf = pd.concat([resultdf,r],axis=1)
     resultdf = pd.concat(resultdf_list, axis=1)
     #print("--- %s seconds ---" % (time.time() - start_time))
@@ -92,20 +108,20 @@ def get_label(df, day):
         label = pd.DataFrame(data=[1],columns=["label"])
     return label
 
-def get_straddle_features_alldates(df):
+def get_straddle_features_alldates(df_straddle):
     print("get_straddle_features_alldates")
 
     #straddle_features = pd.DataFrame()
     straddle_features_list = []
 
-    days = df["EntryDate"].unique()
+    days = df_straddle["EntryDate"].unique()
     print(days)
 
     for day in days:
-        features_df = get_features(df,day,4)
+        features_df = get_features(df_straddle,day,4)
         #print("features_df")
         #print(features_df.shape)
-        label_df = get_label(df,day)
+        label_df = get_label(df_straddle,day)
 
         #concat with features_ df horisontally:
         print("features_df labels df concat")
